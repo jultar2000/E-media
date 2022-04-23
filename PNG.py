@@ -13,20 +13,53 @@ class PNG:
             raise Exception('This file is not a PNG')
         self.chunks = []
 
+    def __del__(self):
+        try:
+            self.file.close()
+        except AttributeError:
+            pass
+
     def display_file(self):
         tmp_png = self.file
         tmp_png.seek(0)
         img = mpimg.imread(tmp_png)
         plt.imshow(img)
         plt.show()
+        tmp_png.seek(8)
 
-    def read_chunks(self):
+    def display_file_in_hex(self):
+        content = [hex(x) for x in self.file.read()]
+        print(content[0:1000])
+
+    def print_chunks(self):
+        for chunk in self.chunks:
+            chunk.__str__()
+
+    def clear_chunks(self):
+        self.file.seek(8)
+        self.chunks.clear()
+
+    def read_all_chunks(self):
         while True:
             length = self.file.read(Chunk.LENGTH_FIELD_LEN)
             type_ = self.file.read(Chunk.TYPE_FIELD_LEN)
+            data = self.file.read(int.from_bytes(length, 'big'))
             crc = self.file.read(Chunk.CRC_FIELD_LEN)
+            specific_chunk = CHUNKTYPES.get(type_, Chunk)
+            chunk = specific_chunk(length, data, type_, crc)
+            self.chunks.append(chunk)
+            if type_ == b'IEND':
+                break
 
-    def create_file_without_ancillary_chunks(self, file_name):
-        critical_chunks_table = [b'IHDR', b'IDAT', b'IEND']
-        file = open(file_name, 'wb')
-        file.write(self.PNG_MAGIC_NUMBER)
+    def read_critical_chunks(self):
+        while True:
+            length = self.file.read(Chunk.LENGTH_FIELD_LEN)
+            type_ = self.file.read(Chunk.TYPE_FIELD_LEN)
+            data = self.file.read(int.from_bytes(length, 'big'))
+            crc = self.file.read(Chunk.CRC_FIELD_LEN)
+            if type_ in critical_chunks_table:
+                specific_chunk = CHUNKTYPES.get(type_, Chunk)
+                chunk = specific_chunk(length, data, type_, crc)
+                self.chunks.append(chunk)
+            if type_ == b'IEND':
+                break
