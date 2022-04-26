@@ -53,18 +53,50 @@ class IEND(Chunk):
     def __init__(self, length, type_, data, crc):
         super().__init__(length, type_, data, crc)
 
+
+class gAMA(Chunk):
+    def __init__(self, length, type_, data, crc):
+        super().__init__(length, type_, data, crc)
+
     def __str__(self):
-        return super().__str__()
+        gamma = int.from_bytes(self.data, 'big') / 100000
+        print("Chunk: " + codecs.decode(self.type_, 'UTF-8'))
+        print("    Gamma number:" + str(gamma))
+
+
+class cHRM(Chunk):
+    def __init__(self, length, type_, data, crc):
+        super().__init__(length, type_, data, crc)
+
+    def __str__(self):
+        values = struct.unpack('>iiiiiiii', self.data)
+        WPx = values[0] / 100000
+        WPy = values[1] / 100000
+        Rx = values[2] / 100000
+        Ry = values[3] / 100000
+        Gx = values[4] / 100000
+        Gy = values[5] / 100000
+        Bx = values[6] / 100000
+        By = values[7] / 100000
+        print("Chunk: " + codecs.decode(self.type_, 'UTF-8'))
+        print("    WhitePointX: " + str(WPx))
+        print("    WhitePointY: " + str(WPy))
+        print("    RedX: " + str(Rx))
+        print("    RedY: " + str(Ry))
+        print("    GreenX: " + str(Gx))
+        print("    GreenY: " + str(Gy))
+        print("    BlueX: " + str(Bx))
+        print("    BlueY: " + str(By))
 
 
 CHUNKTYPES = {
     b'IHDR': IHDR,
     # b'PLTE': PLTE,
     b'IDAT': IDAT,
-    b'IEND': IEND
+    b'IEND': IEND,
     # b'tIME': tIME,
-    # b'gAMA': gAMA,
-    # b'cHRM': cHRM,
+    b'gAMA': gAMA,
+    b'cHRM': cHRM
 }
 
-critical_chunks_table = [b'IHDR', b'IDAT', b'IEND']
+CRITICAL_CHUNKS_TABLE = [b'IHDR', b'IDAT', b'IEND']

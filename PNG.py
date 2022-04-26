@@ -40,6 +40,7 @@ class PNG:
         self.chunks.clear()
 
     def read_all_chunks(self):
+        self.chunks = []
         while True:
             length = self.file.read(Chunk.LENGTH_FIELD_LEN)
             type_ = self.file.read(Chunk.TYPE_FIELD_LEN)
@@ -49,17 +50,33 @@ class PNG:
             chunk = specific_chunk(length, data, type_, crc)
             self.chunks.append(chunk)
             if type_ == b'IEND':
+                self.file.seek(8)
                 break
 
     def read_critical_chunks(self):
+        self.chunks = []
         while True:
             length = self.file.read(Chunk.LENGTH_FIELD_LEN)
             type_ = self.file.read(Chunk.TYPE_FIELD_LEN)
             data = self.file.read(int.from_bytes(length, 'big'))
             crc = self.file.read(Chunk.CRC_FIELD_LEN)
-            if type_ in critical_chunks_table:
+            if type_ in CRITICAL_CHUNKS_TABLE:
                 specific_chunk = CHUNKTYPES.get(type_, Chunk)
                 chunk = specific_chunk(length, data, type_, crc)
                 self.chunks.append(chunk)
             if type_ == b'IEND':
+                self.file.seek(8)
                 break
+
+    def create_file_only_with_critical_chunks(self, file_path):
+        new_file = open(file_path, 'wb')
+        new_file.write(self.PNG_MAGIC_NUMBER)
+
+        for chunk in self.chunks:
+            if chunk.type_ in CRITICAL_CHUNKS_TABLE:
+                new_file.write(chunk.length)
+                new_file.write(chunk.type_)
+                new_file.write(chunk.data)
+                new_file.write(chunk.crc)
+
+        new_file.close()
