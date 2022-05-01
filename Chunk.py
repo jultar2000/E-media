@@ -89,13 +89,63 @@ class cHRM(Chunk):
         print("    BlueY: " + str(By))
 
 
+class tIME(Chunk):
+    def __init__(self, length, type_, data, crc):
+        super().__init__(length, type_, data, crc)
+
+    def __str__(self):
+        values = struct.unpack('>hbbbbb', self.data)
+        year = values[0]
+        month = values[1]
+        day = values[2]
+        hour = values[3]
+        minute = values[4]
+        second = values[5]
+        print("Chunk: " + codecs.decode(self.type_, 'UTF-8'))
+        print("    Last modification: "
+              + str(year) + ' ' + str(month) + ' ' + str(day)
+              + ' ' + str(hour) + ' ' + str(minute) + ' ' + str(second))
+
+
+class pHYs(Chunk):
+    def __init__(self, length, type_, data, crc):
+        super().__init__(length, type_, data, crc)
+
+    def __str__(self):
+        values = struct.unpack('>iib', self.data)
+        pixX = values[0]
+        pixY = values[1]
+        unit = values[2]
+        print("Chunk: " + codecs.decode(self.type_, 'UTF-8'))
+        print("    X-axis: " + str(pixX))
+        print("    Y-axis: " + str(pixY))
+        print("    unit: " + str(unit))
+
+
+# Does not work
+class PLTE(Chunk):
+    def __init__(self, length, type_, data, crc):
+        super().__init__(length, type_, data, crc)
+
+    def __str__(self):
+        values = struct.unpack('>bbb', self.data)
+        red = values[0]
+        green = values[1]
+        blue = values[2]
+        print("Chunk: " + codecs.decode(self.type_, 'UTF-8'))
+        print("    Red: " + str(red))
+        print("    Green: " + str(green))
+        print("    Blue: " + str(blue))
+
+
 CHUNKTYPES = {
     b'IHDR': IHDR,
-    # b'PLTE': PLTE,
+    b'PLTE': PLTE,
     b'IDAT': IDAT,
     b'IEND': IEND,
-    # b'tIME': tIME,
+    b'tIME': tIME,
     b'gAMA': gAMA,
+    b'pHYs': pHYs,
     b'cHRM': cHRM
 }
 
