@@ -1,6 +1,7 @@
 import cv2
 from matplotlib import image as mpimg, pyplot as plt
 import numpy as np
+from skimage.color.rgb_colors import green
 
 from Chunk import *
 
@@ -30,16 +31,31 @@ class PNG:
         plt.show()
         tmp_png.seek(8)
 
+    def display_original_and_cleaned_file(self, path, file_name):
+        file_path = 'images/' + file_name + '.png'
+        img = cv2.imread(path, 0)
+        self.create_file_only_with_critical_chunks(file_path)
+        img2 = cv2.imread(file_path, 0)
+
+        plt.subplot(121), plt.imshow(img, cmap='Spectral')
+        plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+        plt.subplot(122), plt.imshow(img2, cmap='Spectral')
+        plt.title('Cleaned Image'), plt.xticks([]), plt.yticks([])
+        plt.show()
+
     def fourier_transform(self, path):
         img = cv2.imread(path, 0)
         f = np.fft.fft2(img)
         fshift = np.fft.fftshift(f)
         magnitude_spectrum = 20 * np.log(np.abs(fshift))
+        phase_spectrum = np.asarray(np.angle(fshift))
 
-        plt.subplot(121), plt.imshow(img, cmap='gray')
+        plt.subplot(131), plt.imshow(img, cmap='gray')
         plt.title('Input Image'), plt.xticks([]), plt.yticks([])
-        plt.subplot(122), plt.imshow(magnitude_spectrum, cmap='gray')
+        plt.subplot(132), plt.imshow(magnitude_spectrum, cmap='gray')
         plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+        plt.subplot(133), plt.imshow(phase_spectrum, cmap='gray')
+        plt.title('Phase Spectrum'), plt.xticks([]), plt.yticks([])
         plt.show()
 
     def display_file_in_hex(self):

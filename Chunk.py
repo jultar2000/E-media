@@ -103,8 +103,8 @@ class tIME(Chunk):
         second = values[5]
         print("Chunk: " + codecs.decode(self.type_, 'UTF-8'))
         print("    Last modification: "
-              + str(year) + ' ' + str(month) + ' ' + str(day)
-              + ' ' + str(hour) + ' ' + str(minute) + ' ' + str(second))
+              + str(year) + '/' + str(month) + '/' + str(day)
+              + ' ' + str(hour) + ':' + str(minute) + ':' + str(second))
 
 
 class pHYs(Chunk):
