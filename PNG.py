@@ -1,9 +1,7 @@
-import cv2
 from matplotlib import image as mpimg, pyplot as plt
-import numpy as np
-from skimage.color.rgb_colors import green
-
 from Chunk import *
+import numpy as np
+import cv2
 
 
 class PNG:
@@ -33,13 +31,13 @@ class PNG:
 
     def display_original_and_cleaned_file(self, path, file_name):
         file_path = 'images/' + file_name + '.png'
-        img = cv2.imread(path, 0)
+        img = mpimg.imread(path)
         self.create_file_only_with_critical_chunks(file_path)
-        img2 = cv2.imread(file_path, 0)
+        img2 = mpimg.imread(file_path)
 
-        plt.subplot(121), plt.imshow(img, cmap='Spectral')
+        plt.subplot(121), plt.imshow(img)
         plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-        plt.subplot(122), plt.imshow(img2, cmap='Spectral')
+        plt.subplot(122), plt.imshow(img2)
         plt.title('Cleaned Image'), plt.xticks([]), plt.yticks([])
         plt.show()
 
@@ -50,12 +48,17 @@ class PNG:
         magnitude_spectrum = 20 * np.log(np.abs(fshift))
         phase_spectrum = np.asarray(np.angle(fshift))
 
-        plt.subplot(131), plt.imshow(img, cmap='gray')
-        plt.title('Input Image'), plt.xticks([]), plt.yticks([])
-        plt.subplot(132), plt.imshow(magnitude_spectrum, cmap='gray')
+        plt.subplot(221), plt.imshow(magnitude_spectrum, cmap='gray')
         plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
-        plt.subplot(133), plt.imshow(phase_spectrum, cmap='gray')
+        plt.subplot(222), plt.imshow(phase_spectrum, cmap='gray')
         plt.title('Phase Spectrum'), plt.xticks([]), plt.yticks([])
+
+        plt.subplot(223), plt.imshow(img, cmap='gray')
+        plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+        inverted_f = np.fft.ifft2(f)
+        plt.subplot(224), plt.imshow(np.abs(inverted_f), cmap='gray')
+        plt.title('Inverted Fourier'), plt.xticks([]), plt.yticks([])
+
         plt.show()
 
     def display_file_in_hex(self):
@@ -78,7 +81,12 @@ class PNG:
             data = self.file.read(int.from_bytes(length, 'big'))
             crc = self.file.read(Chunk.CRC_FIELD_LEN)
             specific_chunk = CHUNKTYPES.get(type_, Chunk)
-            chunk = specific_chunk(length, data, type_, crc)
+            if type_ == b'IDAT':
+                tmp_chunk = [i for i in self.chunks if i.type_ == b'IHDR']
+                width, height = tmp_chunk[0].get_width_height()
+                chunk = specific_chunk(int(width), int(height), length, data, type_, crc)
+            else:
+                chunk = specific_chunk(length, data, type_, crc)
             self.chunks.append(chunk)
             if type_ == b'IEND':
                 self.file.seek(8)
