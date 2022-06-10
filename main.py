@@ -1,19 +1,38 @@
+import PrimeNumGenerator
+
 from PNG import *
+from PrimeNumGenerator import *
 
-path = "images/wolf.png"
-new_image_path = "images/new_image.png"
+# bang:
+# IHDR, PLTE, IDAT, IEND
 
-png = PNG(path)
-png.read_all_chunks()
-png.print_chunks()
+# switzerland
+# IDHR, pHYs, cHRM, IDAT, IEND
 
-png.display_original_and_cleaned_file(path, 'new_image')
+# rocket
+# IHDR, gAMA, cHRM, bKGD, IDAT, IEND
 
-print('----------------------------------------------')
+# kolka
+# IHDR, tIME, IDAT, IEND
 
-new_png = PNG(new_image_path)
-new_png.read_all_chunks()
-new_png.print_chunks()
+# pikaczu
+# IHDR, gAMA, sRGB, cHRM, bKGD, IDAT, IEND
 
-png.fourier_transform(path)
-new_png.fourier_transform(new_image_path)
+# path = "images/bang.png"
+# new_image_path = "images/new_image.png"
+#
+# png = PNG(path)
+# png.read_all_chunks()
+# png.print_chunks()
+# png.display_original_and_cleaned_file(path, 'new_image')
+#
+# print('----------------------------------------------')
+#
+# new_png = PNG(new_image_path)
+# new_png.read_all_chunks()
+# new_png.print_chunks()
+# png.fourier_transform(path)
+# new_png.fourier_transform(new_image_path)
+
+num = PrimeNumGenerator.generate_prime_number()
+print(num)

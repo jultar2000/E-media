@@ -81,12 +81,7 @@ class PNG:
             data = self.file.read(int.from_bytes(length, 'big'))
             crc = self.file.read(Chunk.CRC_FIELD_LEN)
             specific_chunk = CHUNKTYPES.get(type_, Chunk)
-            if type_ == b'IDAT':
-                tmp_chunk = [i for i in self.chunks if i.type_ == b'IHDR']
-                width, height = tmp_chunk[0].get_width_height()
-                chunk = specific_chunk(int(width), int(height), length, data, type_, crc)
-            else:
-                chunk = specific_chunk(length, data, type_, crc)
+            chunk = specific_chunk(length, data, type_, crc)
             self.chunks.append(chunk)
             if type_ == b'IEND':
                 self.file.seek(8)
