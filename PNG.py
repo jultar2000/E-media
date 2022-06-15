@@ -3,6 +3,9 @@ from Chunk import *
 import numpy as np
 import cv2
 
+from Keys import Keys
+from rsa import RSA
+
 
 class PNG:
     def __init__(self, path):
@@ -14,6 +17,11 @@ class PNG:
         if self.file.read(8) != self.PNG_MAGIC_NUMBER:
             raise Exception('This file is not a PNG')
         self.chunks = []
+        self.encrypt_data = bytearray()
+        self.after_iend_data = bytearray()
+        self.decrypt_data = bytearray()
+        self.encrypt_data_from_library = bytearray()
+        self.after_iend_data__from_library = bytearray()
 
     def __del__(self):
         try:
@@ -87,6 +95,61 @@ class PNG:
                 self.file.seek(8)
                 break
 
+    def read_all_chunks_for_rsa_ecb(self):
+        self.chunks = []
+        while True:
+            length = self.file.read(Chunk.LENGTH_FIELD_LEN)
+            type_ = self.file.read(Chunk.TYPE_FIELD_LEN)
+            data = self.file.read(int.from_bytes(length, 'big'))
+            crc = self.file.read(Chunk.CRC_FIELD_LEN)
+            specific_chunk = CHUNKTYPES.get(type_, Chunk)
+            chunk = specific_chunk(length, data, type_, crc)
+            if type_ == b'IDAT':
+                keys = Keys(512)
+                public_key = keys.generate_public_key()
+                private_key = keys.generate_private_key()
+                rsa = RSA(public_key, private_key)
+                self.encrypt_data, self.after_iend_data = rsa.ecb_encrypt(data)
+                self.decrypt_data = rsa.ecb_decrypt(self.encrypt_data, self.after_iend_data)
+                self.encrypt_data_from_library, self.after_iend_data__from_library = rsa.crypto_library_encrypt(
+                    data)
+            self.chunks.append(chunk)
+            if type_ == b'IEND':
+                self.file.seek(8)
+                break
+
+    # def IDAT_chunk_processor_cbc(self):
+    #     IDAT_data = b''.join(chunk.chunk_data for chunk in self.chunks
+    #                          if chunk.chunk_type == b'IDAT')
+    #     IDAT_data = zlib.decompress(IDAT_data)
+    #     IDAT_filter = IDATFilter(self.width, self.height, IDAT_data)
+    #     information = IDAT_filter.print_recon_pixels()
+    #     print(information)
+    #     keys = Keys(512)
+    #     public_key = keys.generate_public_key()
+    #     private_key = keys.generate_private_key()
+    #     rsa = RSA(public_key, private_key)
+    #     self.encrypt_data, self.after_iend_data = rsa.cbc_encrypt(IDAT_data)
+    #     self.decrypt_data = rsa.cbc_decrypt(self.encrypt_data, self.after_iend_data)
+
+    def read_all_chunks_for_rsa_cbc(self):
+        self.chunks = []
+        while True:
+            length = self.file.read(Chunk.LENGTH_FIELD_LEN)
+            type_ = self.file.read(Chunk.TYPE_FIELD_LEN)
+            data = self.file.read(int.from_bytes(length, 'big'))
+            crc = self.file.read(Chunk.CRC_FIELD_LEN)
+            if type_ == b'IDAT':
+                print('dupa')
+                # tutaj wstawiamy konwerter
+            else:
+                specific_chunk = CHUNKTYPES.get(type_, Chunk)
+                chunk = specific_chunk(length, data, type_, crc)
+            self.chunks.append(chunk)
+            if type_ == b'IEND':
+                self.file.seek(8)
+                break
+
     def read_critical_chunks(self):
         self.chunks = []
         while True:
@@ -111,6 +174,22 @@ class PNG:
                 new_file.write(chunk.length)
                 new_file.write(chunk.type_)
                 new_file.write(chunk.data)
+                new_file.write(chunk.crc)
+
+        new_file.close()
+
+    def create_ecb_file(self, file_path):
+        new_file = open(file_path, 'wb')
+        new_file.write(self.PNG_MAGIC_NUMBER)
+
+        for chunk in self.chunks:
+            if chunk.type_ in CRITICAL_CHUNKS_TABLE:
+                new_file.write(chunk.length)
+                new_file.write(chunk.type_)
+                if chunk.type_ == b'IDAT':
+                    new_file.write(self.encrypt_data)
+                else:
+                    new_file.write(chunk.data)
                 new_file.write(chunk.crc)
 
         new_file.close()

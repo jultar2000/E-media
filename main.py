@@ -18,11 +18,13 @@ from PrimeNumGenerator import *
 # pikaczu
 # IHDR, gAMA, sRGB, cHRM, bKGD, IDAT, IEND
 
-# path = "images/bang.png"
-# new_image_path = "images/new_image.png"
+path = "images/gull.png"
+new_image_path = "images/new_image.png"
 #
-# png = PNG(path)
-# png.read_all_chunks()
+png = PNG(path)
+png.read_all_chunks_for_rsa_ecb()
+png.create_ecb_file(new_image_path)
+print("elo")
 # png.print_chunks()
 # png.display_original_and_cleaned_file(path, 'new_image')
 #
@@ -33,6 +35,3 @@ from PrimeNumGenerator import *
 # new_png.print_chunks()
 # png.fourier_transform(path)
 # new_png.fourier_transform(new_image_path)
-
-num = PrimeNumGenerator.generate_prime_number()
-print(num)
